@@ -3,6 +3,8 @@
 # redditPANDA
 ### *A subreddit scraper*
 
+Author: @elric-dev
+
 ## What redditPanda does
 
 redditPanda is a tool for the continuous chronological scraping of a subreddit. It allows you to take the snapshots of the recent threads in a subreddit at specified time intervals. Panda watches each thread for 24 hours, keeping a copy of all the comments in it at the time of the snapshot.  
@@ -16,7 +18,7 @@ redditPanda runs on PRAW. Therfore, before getting started, you need to install 
 
 PRAW supports python 2.7, 3.3, 3.4, 3.5, and 3.6. The recommended way to install PRAW is via `pip`.
 
-```python
+```
 pip install praw
 ```
 
