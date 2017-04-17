@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''
 @uthor: Saleem
 Date: Jan 27, 2017
@@ -5,7 +6,7 @@ Updated: March 1, 2017
 Updated: March 9, 2017
 Completed: April 17, 2017
 
-redditPanda Pipeline, continually scrape a subreddit to get deleted comments.
+redditPANDA Pipeline, continually scrape a subreddit to get deleted comments.
 '''
 #----------------------------------------------------------------------
 # Suppress pyc files
@@ -19,7 +20,8 @@ from datetime import datetime
 import json
 import os 
 import praw
-import config as c
+#import config as c
+import config_2x as c
 from catbot import Catbot
 from sciurus import scheduler
 
