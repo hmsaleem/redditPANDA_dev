@@ -4,6 +4,7 @@
 ### *A subreddit scraper*
 
 Author: @elric-dev
+Last Push: April 17, 2017
 
 ## What redditPanda does
 
@@ -19,7 +20,7 @@ redditPanda runs on PRAW. Therfore, before getting started, you need to install 
 PRAW supports python 2.7, 3.3, 3.4, 3.5, and 3.6. The recommended way to install PRAW is via `pip`.
 
 ```
-pip install praw
+$ pip install praw
 ```
 
 You can read more at `https://praw.readthedocs.io/en/latest/getting_started/installation.html`.
@@ -48,4 +49,8 @@ Field | Description
 
 Finally, you also need `user_agent`. Again, this field can be anything you want. Make sure it is descriptive, unique and contains your username. For example `A subreddit scraper by u/test`. 
 
-Note: Panda runs in `read only` mode, providing access to Reddit like a logged out user. 
+Note: Panda runs in `read only` mode, providing access to Reddit like a logged out user.
+
+### NOTE: 
+Update the config file with relevant details before running.
+Use the monitor script to fire off PANDA. monitor makes sure to restart PANDA if it crashers! 

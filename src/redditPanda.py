@@ -2,7 +2,8 @@
 @uthor: Saleem
 Date: Jan 27, 2017
 Updated: March 1, 2017
-Completed: March 9, 2017
+Updated: March 9, 2017
+Completed: April 17, 2017
 
 redditPanda Pipeline, continually scrape a subreddit to get deleted comments.
 '''
@@ -18,7 +19,7 @@ from datetime import datetime
 import json
 import os 
 import praw
-import config_pf as c
+import config as c
 from catbot import Catbot
 from sciurus import scheduler
 
