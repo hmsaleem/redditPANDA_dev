@@ -3,8 +3,9 @@
 # redditPANDA
 ### *A subreddit scraper*
 
-Author: @elric-dev
-Last Push: April 17, 2017
+Author: @HSaleem :cat:
+
+Last Push: April 18, 2017
 
 ## What redditPanda does
 
@@ -53,4 +54,7 @@ Note: Panda runs in `read only` mode, providing access to Reddit like a logged o
 
 ### NOTE: 
 Update the config file with relevant details before running.
-Use the monitor script to fire off PANDA. monitor makes sure to restart PANDA if it crashers! 
+Use the monitor script to fire off PANDA. monitor makes sure to restart PANDA if it crashers!
+
+Moving to ssh from https
+ 
