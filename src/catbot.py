@@ -7,7 +7,8 @@ Simple slack bot.
 import sys
 sys.dont_write_bytecode = True
 
-import config as c
+# import config as c
+import config_2x as c
 from slacker import Slacker
 
 class Catbot:
