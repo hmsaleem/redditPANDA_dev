@@ -5,13 +5,17 @@
 
 Author: @HSaleem :cat:
 
-Last Push: April 18, 2017
+*NOTE: I am currently redesigning redditPANDA*
+
+Last Push: Nov 22, 2017
 
 ## What redditPanda does
 
 redditPanda is a tool for the continuous chronological scraping of a subreddit. It allows you to take the snapshots of the recent threads in a subreddit at specified time intervals. Panda watches each thread for 24 hours, keeping a copy of all the comments in it at the time of the snapshot.  
 
-Therefore, redditPanda is a valuable tool to study the chornological growth of Reddit threads. 
+Therefore, redditPanda is a valuable tool to study the chornological growth of Reddit threads.
+
+By default, redditPANDA takes a snapshot every 15 minutes. Once the collection of a post is complete (*post is now > 24 hours old*), redditPANDA extracts users with `[removed]` comments and starts to collect their history. 
 
 ## Getting Started
 
@@ -51,6 +55,10 @@ Field | Description
 Finally, you also need `user_agent`. Again, this field can be anything you want. Make sure it is descriptive, unique and contains your username. For example `A subreddit scraper by u/test`. 
 
 Note: Panda runs in `read only` mode, providing access to Reddit like a logged out user.
+
+## redditPANDA Architecture
+
+![](logo/flow.png)
 
 ### NOTE: 
 Update the config file with relevant details before running.
