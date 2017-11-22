@@ -1,4 +1,4 @@
-![](logo/logo_full.png)
+![](logo/logo1.png)
 
 # redditPANDA
 ### *A subreddit scraper*
