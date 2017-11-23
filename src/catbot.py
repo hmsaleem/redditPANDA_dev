@@ -7,21 +7,21 @@ Simple slack bot.
 import sys
 sys.dont_write_bytecode = True
 
-# import config as c
-import config_2x as c
 from slacker import Slacker
+
 
 class Catbot:
 
-    def __init__(self, message):
-        self.message = message
-        self.slackClient = Slacker(c.secret)
-        self.postToSlack()
+    def __init__(self, secret, channel, user):
+        self.secret = secret
+        self.channel = channel
+        self.user = user
+        self.slackClient = Slacker(self.secret)
 
-    def postToSlack(self):
+    def postToSlack(self, message):
         try:
-            print self.message
+            print message
             self.slackClient.chat.post_message(
-            	c.channel, self.message, as_user=c.user)
+                self.channel, message, as_user=self.user)
         except Exception as e:
             print e
