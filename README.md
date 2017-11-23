@@ -62,10 +62,28 @@ Note: *redditPANDA* runs in `read only` mode, providing access to Reddit like a 
 
 ### Design
 
-*redditPANDA* uses a common 
- 
-Update the config file with relevant details before running.
-Use the monitor script to fire off PANDA. monitor makes sure to restart PANDA if it crashers!
+*redditPANDA* uses a common `CONFIG.INI` file that include the Oauth details.
 
-Moving to ssh from https
+**Sample CONFIG file**
+
+```
+[CommonConfigs]
+datapath: XXXXXXXXXXXXXXXXXXXX
+slack_secret: XXXXXXXXXXXXXXXXXXXX
+slack_user: XXXXXXXXXXXXXXXXXXXX
+
+[subreddit_name]
+username: XXXXXXXXXXXXXXXXXXXX
+password: XXXXXXXXXXXXXXXXXXXX
+client_id: XXXXXXXXXXXXXXXXXXXX
+client_secret: XXXXXXXXXXXXXXXXXXXX
+user_agent: XXXXXXXXXXXXXXXXXXXX
+slack_channel: XXXXXXXXXXXXXXXXXXXX
+```
  
+### Notes
+
+* Update `CONFIG.INI` file with relevant details before running.
+* *redditPANDA* uses a slack bot to update its progress.
+* *redditPANDA* uses a monitor script to auto restart in case it crashes. 
+
