@@ -24,10 +24,6 @@ from sciurus import scheduler
 from tastypy import POD
 from pprint import pprint
 
-# Setting up proxy settings
-os.environ['HTTPS_PROXY'] = 'socks5://127.0.0.1:9400'
-os.environ['HTTP_PROXY'] = 'socks5://127.0.0.1:9400'
-
 #----------------------------------------------------------------------
 # Helper methods
 
@@ -123,6 +119,9 @@ class postpanda:
     # Login into Reddit with config details
     def login(self):
         conf = ConfigSectionMap(self.subreddit, self.config)
+        proxyport = str(conf['proxpyport'])
+        os.environ['HTTPS_PROXY'] = 'socks5://127.0.0.1:{}'.format(proxyport)
+        os.environ['HTTP_PROXY'] = 'socks5://127.0.0.1:{}'.format(proxyport)
         comm = ConfigSectionMap("CommonConfigs", self.config)
         self.reddit = praw.Reddit(
             client_id=conf['client_id'],
@@ -156,7 +155,7 @@ class postpanda:
 
         time_now = datetime.utcnow()
         post_list = []
-        for post in subreddit.new(limit=200):
+        for post in subreddit.new(limit=400):
             timediff = time_now - datetime.utcfromtimestamp(post.created_utc)
             if timediff.days == 0:
                 post_list.append(post.id)
@@ -241,18 +240,11 @@ if __name__ == "__main__":
     # Login into Reddit
     subreddit = sys.argv[1]
 
-    p = postpanda(subreddit)
-    p.login()
-    p.setup()
-    p.redditPANDA()
-
-    '''
     # Login into Reddit
-    p = panda()
+    p = postpanda(subreddit)
     p.login()
     p.setup()
 
     # Schedule the scraping
     runPanda = scheduler.scheduler(m=20)
     runPanda.runit(p.redditPANDA)
-    '''
