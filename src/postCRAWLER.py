@@ -2,7 +2,9 @@
 '''
 @uthor: Saleem
 
-redditPANDA Pipeline, continually scrape a subreddit to get deleted comments.
+redditPANDA Pipeline,
+crwals a subreddit
+continually scrapes to get deleted comments.
 '''
 #----------------------------------------------------------------------
 # Suppress pyc files
@@ -22,16 +24,21 @@ from sciurus import scheduler
 from tastypy import POD
 from pprint import pprint
 
+# Setting up proxy settings
+os.environ['HTTPS_PROXY'] = 'socks5://127.0.0.1:9400'
+os.environ['HTTP_PROXY'] = 'socks5://127.0.0.1:9400'
+
 #----------------------------------------------------------------------
 # Helper methods
 
 
 def removekeys(d, keys):
-    for key in keys:
-        try:
-            del d[key]
-        except KeyError:
-            pass
+    for key in d.keys():
+        if key not in keys:
+	    try:
+                del d[key]
+            except KeyError:
+                pass
     return
 
 
@@ -62,136 +69,40 @@ def clean(body_text):
 
 
 # Removing un-needed fields
-comm_dict_remove = [
-    '_fetched',
-    '_mod',
-    '_reddit',
-    '_replies',
-    '_post',
-    '_info_params',
-    '_submission',
-    'approved_by',
-    'approved_at_utc',
-    'banned_at_utc',
-    'can_gild',
-    'can_mod_post',
-    'collapsed',
-    'collapsed_reason',
-    'archived',
-    'author_flair_css_class',
-    'author_flair_text',
-    'banned_by',
-    'body_html',
-    'created',
-    'distinguished',
-    'downs',
-    'likes',
-    'mod_reports',
-    'num_reports',
-    'removal_reason',
-    'report_reasons',
-    'saved',
-    'score_hidden',
-    'stickied',
-    'subreddit_id',
-    'subreddit_name_prefixed',
-    'subreddit_type',
-    'ups',
-    'user_reports']
+comm_dict_keep= [
+     'author',
+     'body',
+     'controversiality',
+     'created_utc',
+     'edited',
+     'gilded',
+     'id',
+     'link_id',
+     'name',
+     'parent_id',
+     'score',
+     'subreddit']
 
-post_dict_remove = [
-    '_info_params',
-    'approved_at_utc',
-    'banned_at_utc',
-    'can_gild',
-    'can_mod_post',
-    'is_crosspostable',
-    'is_self',
-    'is_video',
-    'num_crossposts',
-    'parent_whitelist_status',
-    '_comments',
-    '_comments_by_id',
-    '_fetched',
-    '_flair',
-    '_mod',
-    '_reddit',
-    'approved_by',
-    'archived',
-    'author_flair_css_class',
-    'author_flair_text',
-    'banned_by',
-    'brand_safe',
-    'clicked',
-    'pinned',
-    'thumbnail_height',
-    'thumbnail_width',
-    'view_count',
-    'whitelist_status',
-    'comment_limit',
-    'comment_sort',
-    'contest_mode',
-    'created',
-    'distinguished',
-    'downs',
-    'gilded',
-    'hidden',
-    'hide_score',
-    'likes',
-    'link_flair_css_class',
-    'link_flair_text',
-    'media',
-    'media_embed',
-    'mod_reports',
-    'name',
-    'num_reports',
-    'over_18',
-    'post_hint',
-    'preview',
-    'quarantine',
-    'removal_reason',
-    'report_reasons',
-    'saved',
-    'secure_media',
-    'secure_media_embed',
-    'selftext_html',
-    'spoiler',
-    'stickied',
-    'subreddit',
-    'subreddit_id',
-    'subreddit_name_prefixed',
-    'subreddit_type',
-    'suggested_sort',
-    'thumbnail',
-    'ups',
-    'user_reports',
-    'visited']
+post_dict_keep = [
+     'author',
+     'created_utc',
+     'gilded',
+     'id',
+     'locked',
+     'num_comments',
+     'permalink',
+     'score',
+     'selftext',
+     'subreddit',
+     'title',
+     'upvote_ratio',
+     'url']
 
 #----------------------------------------------------------------------
-# Class comment for extracting deleted comments from snapshots
+# Class POST Panda
 
 
-class comment:
-    def __init__(self, comment_json, j_obj):
-        self.c_id = j_obj['id']
-        self.c_obj = comment_json
-        self.c_body_snap = []
-        self.c_body_snap.append(j_obj['body'])
-        return
-
-    def increment(self):
-        self.c_body_snap.append('')
-        return
-
-    def update(self, j_obj):
-        self.c_body_snap[-1] = j_obj['body']
-        return
-
-#----------------------------------------------------------------------
-# Class Panda
-
-
-class panda:
+class postpanda:
     def __init__(self, subname):
         self.reddit = None
         self.catbot = None
@@ -206,7 +117,7 @@ class panda:
         self.datapath = os.path.join(self.basepath, self.subreddit)
         self.commpath = os.path.join(self.datapath, 'comments')
         self.userpath = os.path.join(self.datapath, 'users')
-        self.trckpath = os.path.join(self.datapath, 'tracker')
+        self.trckpath = os.path.join(self.datapath, 'trackers', 'posttracker')
         return
 
     # Login into Reddit with config details
@@ -261,8 +172,9 @@ class panda:
             post_dict['author'] = post.author.name
         except AttributeError:
             post_dict['author'] = None
+        post_dict['subreddit'] = post.subreddit.display_name
         post_dict['retrieved'] = int(time.time())
-        removekeys(post_dict, post_dict_remove)
+        removekeys(post_dict, post_dict_keep)
         z = json.dumps(post_dict)
         data_directory = os.path.join(self.commpath, post_id)
         makedir(data_directory)
@@ -288,7 +200,7 @@ class panda:
                     comment_dict['author'] = None
 
                 comment_dict['subreddit'] = comment.subreddit.display_name
-                removekeys(comment_dict, comm_dict_remove)
+                removekeys(comment_dict, comm_dict_keep)
                 z = json.dumps(comment_dict)
                 fout.write('%s\n' % z)
         return
@@ -304,53 +216,9 @@ class panda:
             list(set(self.current_posts) - set(self.previous_posts)))
         for post_id in new_posts:
             self.track_pod[post_id] = {
-                'collected': False, 'processed': False}
+                'collected': False}
         return
 
-    # Posts that are done collecting
-    def get_deleted(self):
-        posts_to_process = [post_id for post_id in self.track_pod if self.track_pod[post_id]
-                            ['collected'] and self.track_pod[post_id]['processed'] == False]
-        for post_id in posts_to_process:
-            deleted_comments = self._extract_deleted(post_id)
-        return deleted_comments
-
-    # Method to extract deleted comments
-    def extract_deleted(self, post_id):
-        post_path = os.path.join(self.commpath, post_id)
-        post_files = sorted(os.listdir(post_path))
-
-        post_files = [
-            filename for filename in post_files if 'post' not in filename]
-
-        # dict to create snapshots of all the comments in the post
-        post_snap = {}
-
-        for filename in post_files:
-            for item in post_snap:
-                post_snap[item].increment()
-            post_file_path = os.path.join(post_path, filename)
-            with open(post_file_path, 'r') as fin:
-                all_lines = fin.readlines()
-            for line in all_lines:
-                j_obj = json.loads(line)
-                c_id = j_obj['id']
-                if c_id in post_snap:
-                    post_snap[c_id].update(j_obj)
-                else:
-                    post_snap[c_id] = comment(line, j_obj)
-
-        # extracting deleted comments
-        deleted_comments = []
-        for c_id in sorted(post_snap.keys()):
-            last = clean(post_snap[c_id].c_body_snap[-1])
-            if last == '' or last == '[deleted]' or last == '[removed]':
-                # if last == '' or last == '[removed]':
-                first = clean(post_snap[c_id].c_body_snap[0])
-                if first != '' and first != '[deleted]' and first != '[removed]':
-                    # if first != '' and first != '[removed]':
-                    deleted_comments.append(post_snap[c_id].c_obj)
-        return deleted_comments
 
     # The main method
     def redditPANDA(self):
@@ -373,7 +241,7 @@ if __name__ == "__main__":
     # Login into Reddit
     subreddit = sys.argv[1]
 
-    p = panda(subreddit)
+    p = postpanda(subreddit)
     p.login()
     p.setup()
     p.redditPANDA()
