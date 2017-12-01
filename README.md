@@ -56,6 +56,17 @@ Finally, you also need `user_agent`. Again, this field can be anything you want.
 
 Note: *redditPANDA* runs in `read only` mode, providing access to Reddit like a logged out user.
 
+### Setting up AWS proxy
+
+*redditPanda* uses AWS instances as IP proxies. To setup the proxy:
+
+1) Generate private key on AWS
+2) Upload private key to server
+3) Create a new EC2 using private key from 1)
+4) Run this command on server: `ssh -D <some_high_.port> -f -C -q -N -i path_to_private_key ec2-user@aws-ip-you-get-fromAPI.com`
+
+Then your SOCKS5 proxy is on: `localhost:<whatever_high_port_you_set>`  
+
 ## redditPANDA Architecture
 
 ![](logo/flow.png)
@@ -79,6 +90,7 @@ client_id: XXXXXXXXXXXXXXXXXXXX
 client_secret: XXXXXXXXXXXXXXXXXXXX
 user_agent: XXXXXXXXXXXXXXXXXXXX
 slack_channel: XXXXXXXXXXXXXXXXXXXX
+proxyport: XXXXXXXXXXXXXXXXXXXX
 ```
  
 ### Notes
