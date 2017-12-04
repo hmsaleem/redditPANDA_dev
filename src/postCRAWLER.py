@@ -206,16 +206,14 @@ class postpanda:
 
     # tracker
     def update_tracker(self):
-        tracked_posts = self.track_pod.keys()
         done_posts = sorted(
             list(set(self.previous_posts) - set(self.current_posts)))
         for post_id in done_posts:
-            self.track_pod[post_id]['collected'] = True
+            self.track_pod[post_id] = True
         new_posts = sorted(
             list(set(self.current_posts) - set(self.previous_posts)))
         for post_id in new_posts:
-            self.track_pod[post_id] = {
-                'collected': False}
+            self.track_pod[post_id] = False
         return
 
 
