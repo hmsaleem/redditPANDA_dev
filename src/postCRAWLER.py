@@ -214,6 +214,9 @@ class postpanda:
             list(set(self.current_posts) - set(self.previous_posts)))
         for post_id in new_posts:
             self.track_pod[post_id] = False
+        print 'POD', len(self.track_pod._keys)
+        print 'POD', self.track_pod._path
+        self.track_pod.sync()
         return
 
 
