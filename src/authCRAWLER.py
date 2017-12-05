@@ -97,7 +97,7 @@ post_dict_keep = [
 subs = ['loseit', 'relationships', 'TwoXChromosomes']
 
 #----------------------------------------------------------------------
-# Main Functions
+# Main methods
 
 
 def get_collected(subreddit):
@@ -148,43 +148,33 @@ def process_posts(subreddit, post_id):
 
 
 def get_users(usertrack_pod, subreddit):
-    # Login into Reddit with config details
-    conf = ConfigSectionMap('users', config)
-    proxyport = str(conf['proxpyport'])
-    os.environ['HTTPS_PROXY'] = 'socks5://127.0.0.1:{}'.format(proxyport)
-    os.environ['HTTP_PROXY'] = 'socks5://127.0.0.1:{}'.format(proxyport)
-    comm = ConfigSectionMap("CommonConfigs", self.config)
-    reddit = praw.Reddit(
-        client_id=conf['client_id'],
-        client_secret=conf['client_secret'],
-        password=conf['password'],
-        username=conf['username'],
-        user_agent=conf['user_agent'])
-    catbot = Catbot(
-        comm['slack_secret'],
-        conf['slack_channel'],
-        comm['slack_user'])
-    catbot.postToSlack(
-        'redditPanda initalized for users')
 
-    # Setup connection
-    makedir(self.datapath)
-    makedir(self.commpath)
-    makedir(self.userpath)
-    makedir(self.trckpath)
-    self.reddit.read_only = True
-    self.reddit.config.store_json_result = True
-    self.track_pod = POD(self.trckpath)
+    for user in usertrack_pod._keys:
+        last_comment_id = usertrack_pod[user]
+        comments = []
+        for comment in reddit.redditor(user).comments.new(limit=None):
+            if comment.id == last_comment_id:
+                break
+            comments.append(comment)
+        comments = comments[::-1]
+        user_file = os.path.join(userpath, user + '.txt')
+        with open(user_file, 'a') as fout:
+            for item in comments:
+                comment_dict = item.__dict__
+                comment_dict['author'] = comment.author.name
+                comment_dict['subreddit'] = comment.subreddit.display_name
+                removekeys(comment_dict, comm_dict_keep)
+                z = json.dumps(comment_dict)
+                fout.write('%s\n' % z)
+        last_comment_id = comments[-1]['id']
+        usertrack_pod[user] = last_comment_id
+    catbot.postToSlack('Complete ... %s, %s' %
+                       (subreddit, str(datetime.now())[5:-10]))
+    usertrack_pod.sync()
     return
-#----------------------------------------------------------------------
 
 
-config = ConfigParser.ConfigParser()
-config.read('CONFIG.INI')
-basepath = ConfigSectionMap("CommonConfigs", config)['datapath']
-
-
-def main(subreddit):
+def userPANDA(subreddit):
     # Setup
     datapath = os.path.join(basepath, subreddit)
     posttrpath = os.path.join(datapath, 'trackers', 'processtracker')
@@ -206,170 +196,48 @@ def main(subreddit):
     for post_id in collected_posts:
         collected_users.extend(process_posts(subreddit, post_id))
         processtrack_pod[post_id] = True
+    processtrack_pod.sync()
 
     collected_users = list(set(collected_users) - set(processed_users))
     for user in collected_users:
         usertrack_pod[user] = None
+    usertrack_pod.sync()
 
     get_users(usertrack_pod, subreddit)
 
     return
 
 
-for sub in subs:
-    print sub
-    main(sub)
-
-'''
-class panda:
-    def __init__(self, subname):
-        self.reddit = None
-        self.catbot = None
-        self.track_pod = None
-        self.subreddit = subname
-        self.previous_posts = []
-        self.current_posts = []
-        self.config = ConfigParser.ConfigParser()
-        self.config.read('CONFIG.INI')
-        self.basepath = ConfigSectionMap(
-            "CommonConfigs", self.config)['datapath']
-        self.datapath = os.path.join(self.basepath, self.subreddit)
-        self.commpath = os.path.join(self.datapath, 'comments')
-        self.userpath = os.path.join(self.datapath, 'users')
-        self.trckpath = os.path.join(self.datapath, 'trackers', 'posttracker')
-        return
-
-    # Login into Reddit with config details
-    def login(self):
-        conf = ConfigSectionMap(self.subreddit, self.config)
-        proxyport = str(conf['proxpyport'])
-        os.environ['HTTPS_PROXY'] = 'socks5://127.0.0.1:{}'.format(proxyport)
-        os.environ['HTTP_PROXY'] = 'socks5://127.0.0.1:{}'.format(proxyport)
-        comm = ConfigSectionMap("CommonConfigs", self.config)
-        self.reddit = praw.Reddit(
-            client_id=conf['client_id'],
-            client_secret=conf['client_secret'],
-            password=conf['password'],
-            username=conf['username'],
-            user_agent=conf['user_agent'])
-        self.catbot = Catbot(
-            comm['slack_secret'],
-            conf['slack_channel'],
-            comm['slack_user'])
-        self.catbot.postToSlack(
-            'redditPanda initalized for r/%s' %
-            self.subreddit)
-        return
-
-    # Setup connection
-    def setup(self):
-        makedir(self.datapath)
-        makedir(self.commpath)
-        makedir(self.userpath)
-        makedir(self.trckpath)
-        self.reddit.read_only = True
-        self.reddit.config.store_json_result = True
-        self.track_pod = POD(self.trckpath)
-        return
-
-    # Retrieve a list of post made during the past 24 hours
-    def get_posts(self):
-        subreddit = self.reddit.subreddit(self.subreddit)
-
-        time_now = datetime.utcnow()
-        post_list = []
-        for post in subreddit.new(limit=400):
-            timediff = time_now - datetime.utcfromtimestamp(post.created_utc)
-            if timediff.days == 0:
-                post_list.append(post.id)
-        return post_list
-
-    # Retrieve a list of all comments made in a post
-    def get_comments(self, post_id):
-        post = self.reddit.submission(id=post_id)
-        post.comments.replace_more(limit=0)
-        all_comments = post.comments.list()
-        post_dict = post.__dict__
-        try:
-            post_dict['author'] = post.author.name
-        except AttributeError:
-            post_dict['author'] = None
-        post_dict['subreddit'] = post.subreddit.display_name
-        post_dict['retrieved'] = int(time.time())
-        removekeys(post_dict, post_dict_keep)
-        z = json.dumps(post_dict)
-        data_directory = os.path.join(self.commpath, post_id)
-        makedir(data_directory)
-        data_file = os.path.join(data_directory, "post_%s.txt" % post_id)
-        with open(data_file, 'a') as fout:
-            fout.write('%s\n' % z)
-        return all_comments
-
-    # Write retrieved comments to file
-    def write_comments(self, post_id, all_comments):
-        f_index = int(time.time())
-        data_directory = os.path.join(self.commpath, post_id)
-        makedir(data_directory)
-        data_file = os.path.join(
-            data_directory, "%s_%s.txt" %
-            (post_id, f_index))
-        with open(data_file, 'w') as fout:
-            for comment in all_comments:
-                comment_dict = comment.__dict__
-                try:
-                    comment_dict['author'] = comment.author.name
-                except AttributeError:
-                    comment_dict['author'] = None
-
-                comment_dict['subreddit'] = comment.subreddit.display_name
-                removekeys(comment_dict, comm_dict_keep)
-                z = json.dumps(comment_dict)
-                fout.write('%s\n' % z)
-        return
-
-    # tracker
-    def update_tracker(self):
-        done_posts = sorted(
-            list(set(self.previous_posts) - set(self.current_posts)))
-        for post_id in done_posts:
-            self.track_pod[post_id] = True
-        new_posts = sorted(
-            list(set(self.current_posts) - set(self.previous_posts)))
-        for post_id in new_posts:
-            self.track_pod[post_id] = False
-        print 'POD', len(self.track_pod._keys)
-        print 'POD', self.track_pod._path
-        self.track_pod.sync()
-        return
-
-
-    # The main method
-    def redditPANDA(self):
-        self.catbot.postToSlack('Runing ... %s' % str(datetime.now())[5:-10])
-        self.current_posts = self.get_posts()
-        self.update_tracker()
-        print 'Getting comments for %s posts' % len(self.current_posts)
-        for post_id in self.current_posts:
-            all_comments = self.get_comments(post_id)
-            print post_id, len(all_comments)
-            self.write_comments(post_id, all_comments)
-        print 'all files written... %s' % str(datetime.now())[5:-10]
-        self.previous_posts = self.current_posts
-        return
-
-
 #----------------------------------------------------------------------
 if __name__ == "__main__":
 
-    # Login into Reddit
-    subreddit = sys.argv[1]
+    config = ConfigParser.ConfigParser()
+    config.read('CONFIG.INI')
+    basepath = ConfigSectionMap("CommonConfigs", config)['datapath']
 
-    # Login into Reddit
-    p = postpanda(subreddit)
-    p.login()
-    p.setup()
+    # Login into Reddit with config details
+    conf = ConfigSectionMap('users', config)
+    proxyport = str(conf['proxpyport'])
+    os.environ['HTTPS_PROXY'] = 'socks5://127.0.0.1:{}'.format(proxyport)
+    os.environ['HTTP_PROXY'] = 'socks5://127.0.0.1:{}'.format(proxyport)
+    comm = ConfigSectionMap("CommonConfigs", self.config)
+    reddit = praw.Reddit(
+        client_id=conf['client_id'],
+        client_secret=conf['client_secret'],
+        password=conf['password'],
+        username=conf['username'],
+        user_agent=conf['user_agent'])
+    catbot = Catbot(
+        comm['slack_secret'],
+        conf['slack_channel'],
+        comm['slack_user'])
+    catbot.postToSlack(
+        'redditPanda initalized for users')
 
-    # Schedule the scraping
-    runPanda = scheduler.scheduler(m=20)
-    runPanda.runit(p.redditPANDA)
-'''
+    # Setup connection
+    reddit.read_only = True
+    reddit.config.store_json_result = True
+
+    # Get comments
+    for subreddit in subs:
+        userPANDA(subreddit)
