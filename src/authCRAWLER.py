@@ -31,7 +31,7 @@ from pprint import pprint
 def removekeys(d, keys):
     for key in d.keys():
         if key not in keys:
-	    try:
+            try:
                 del d[key]
             except KeyError:
                 pass
@@ -65,42 +65,44 @@ def clean(body_text):
 
 
 # Removing un-needed fields
-comm_dict_keep= [
-     'author',
-     'body',
-     'controversiality',
-     'created_utc',
-     'edited',
-     'gilded',
-     'id',
-     'link_id',
-     'name',
-     'parent_id',
-     'score',
-     'subreddit']
+comm_dict_keep = [
+    'author',
+    'body',
+    'controversiality',
+    'created_utc',
+    'edited',
+    'gilded',
+    'id',
+    'link_id',
+    'name',
+    'parent_id',
+    'score',
+    'subreddit']
 
 post_dict_keep = [
-     'author',
-     'created_utc',
-     'gilded',
-     'id',
-     'locked',
-     'num_comments',
-     'permalink',
-     'score',
-     'selftext',
-     'subreddit',
-     'title',
-     'upvote_ratio',
-     'url']
+    'author',
+    'created_utc',
+    'gilded',
+    'id',
+    'locked',
+    'num_comments',
+    'permalink',
+    'score',
+    'selftext',
+    'subreddit',
+    'title',
+    'upvote_ratio',
+    'url']
 
 subs = ['loseit', 'relationships', 'TwoXChromosomes']
 
 #----------------------------------------------------------------------
 # Main Functions
 
+
 def get_collected(subreddit):
     collected_posts = []
+    datapath = os.path.join(basepath, subreddit)
     trckpath = os.path.join(datapath, 'trackers', 'posttracker')
     track_pod = POD(trckpath)
     for key in track_pod._keys:
@@ -108,15 +110,18 @@ def get_collected(subreddit):
             collected_posts.append(key)
     return collected_posts
 
+
 def process_posts(subreddit, post_id):
+    datapath = os.path.join(basepath, subreddit)
     commpath = os.path.join(datapath, 'comments')
     post_path = os.path.join(commpath, post_id)
     post_files = sorted(os.listdir(post_path))
-    post_files = [filename for filename in post_files if 'post' not in filename]
-    
+    post_files = [
+        filename for filename in post_files if 'post' not in filename]
+
     comms_dict = {}
     miss_comms = set()
-    
+
     for filename in post_files:
         post_file_path = os.path.join(post_path, filename)
         with open(post_file_path, 'r') as fin:
@@ -130,7 +135,7 @@ def process_posts(subreddit, post_id):
             if c_id not in comms_dict:
                 comms_dict[c_id] = []
             comms_dict[c_id].append(j_obj)
-            
+
     auth_list = []
     for item in miss_comms:
         body = clean(comms_dict[item][0]['body'])
@@ -141,11 +146,43 @@ def process_posts(subreddit, post_id):
 
     return auth_list
 
+
+def get_users(usertrack_pod, subreddit):
+    # Login into Reddit with config details
+    conf = ConfigSectionMap('users', config)
+    proxyport = str(conf['proxpyport'])
+    os.environ['HTTPS_PROXY'] = 'socks5://127.0.0.1:{}'.format(proxyport)
+    os.environ['HTTP_PROXY'] = 'socks5://127.0.0.1:{}'.format(proxyport)
+    comm = ConfigSectionMap("CommonConfigs", self.config)
+    reddit = praw.Reddit(
+        client_id=conf['client_id'],
+        client_secret=conf['client_secret'],
+        password=conf['password'],
+        username=conf['username'],
+        user_agent=conf['user_agent'])
+    catbot = Catbot(
+        comm['slack_secret'],
+        conf['slack_channel'],
+        comm['slack_user'])
+    catbot.postToSlack(
+        'redditPanda initalized for users')
+
+    # Setup connection
+    makedir(self.datapath)
+    makedir(self.commpath)
+    makedir(self.userpath)
+    makedir(self.trckpath)
+    self.reddit.read_only = True
+    self.reddit.config.store_json_result = True
+    self.track_pod = POD(self.trckpath)
+    return
 #----------------------------------------------------------------------
+
 
 config = ConfigParser.ConfigParser()
 config.read('CONFIG.INI')
 basepath = ConfigSectionMap("CommonConfigs", config)['datapath']
+
 
 def main(subreddit):
     # Setup
@@ -157,13 +194,31 @@ def main(subreddit):
     processtrack_pod = POD(posttrpath)
     usertrack_pod = POD(usertrpath)
 
-    
     collected_posts = get_collected(subreddit)
-    auth_list = []
+
+    processed_posts = processtrack_pod._keys
+    processed_users = usertrack_pod._keys
+
+    collected_posts = list(set(collected_posts) - set(processed_posts))
+
+    collected_users = []
 
     for post_id in collected_posts:
-        auth_list.extend(process_posts(subreddit, post_id))
+        collected_users.extend(process_posts(subreddit, post_id))
+        processtrack_pod[post_id] = True
 
+    collected_users = list(set(collected_users) - set(processed_users))
+    for user in collected_users:
+        usertrack_pod[user] = None
+
+    get_users(usertrack_pod, subreddit)
+
+    return
+
+
+for sub in subs:
+    print sub
+    main(sub)
 
 '''
 class panda:

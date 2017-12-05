@@ -4,7 +4,7 @@ Date: November 4, 2017
 Parse a month of data and create a subreddit profile
 '''
 
-#Imports
+# Imports
 
 import os
 import sys
@@ -15,7 +15,7 @@ import gzip
 from pprint import pprint
 
 
-#Helper functions
+# Helper functions
 local_data_path = '/home/ndg/users/hsalee/tools/redditPANDA/data'
 
 with open('auths.txt', 'r') as fin:
@@ -32,14 +32,13 @@ for auth in all_auths:
 all_files = sorted(os.listdir(os.path.join(local_data_path, 'authinfo')))
 all_files = [x for x in all_files if '.txt' in x]
 
-#Compile Subreddit info
-
+# Compile Subreddit info
 
 
 for filename in all_files:
     print filename
     file_path = os.path.join(local_data_path, 'authinfo', filename)
-    
+
     with open(file_path, 'r') as fin:
         all_lines = fin.readlines()
 
@@ -52,10 +51,8 @@ for filename in all_files:
 for auth in all_auths:
     print auth
     auth_list = auth_dict[auth]
-    out_file_name = auth+'.txt'
+    out_file_name = auth + '.txt'
     out_file_path = os.path.join(local_data_path, 'authinfo', out_file_name)
     with open(out_file_path, 'w') as fp:
         for line in auth_list:
             fp.write(line)
-    
-

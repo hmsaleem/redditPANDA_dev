@@ -31,7 +31,7 @@ from pprint import pprint
 def removekeys(d, keys):
     for key in d.keys():
         if key not in keys:
-	    try:
+            try:
                 del d[key]
             except KeyError:
                 pass
@@ -65,34 +65,34 @@ def clean(body_text):
 
 
 # Removing un-needed fields
-comm_dict_keep= [
-     'author',
-     'body',
-     'controversiality',
-     'created_utc',
-     'edited',
-     'gilded',
-     'id',
-     'link_id',
-     'name',
-     'parent_id',
-     'score',
-     'subreddit']
+comm_dict_keep = [
+    'author',
+    'body',
+    'controversiality',
+    'created_utc',
+    'edited',
+    'gilded',
+    'id',
+    'link_id',
+    'name',
+    'parent_id',
+    'score',
+    'subreddit']
 
 post_dict_keep = [
-     'author',
-     'created_utc',
-     'gilded',
-     'id',
-     'locked',
-     'num_comments',
-     'permalink',
-     'score',
-     'selftext',
-     'subreddit',
-     'title',
-     'upvote_ratio',
-     'url']
+    'author',
+    'created_utc',
+    'gilded',
+    'id',
+    'locked',
+    'num_comments',
+    'permalink',
+    'score',
+    'selftext',
+    'subreddit',
+    'title',
+    'upvote_ratio',
+    'url']
 
 #----------------------------------------------------------------------
 # Class POST Panda
@@ -218,7 +218,6 @@ class postpanda:
         print 'POD', self.track_pod._path
         self.track_pod.sync()
         return
-
 
     # The main method
     def redditPANDA(self):

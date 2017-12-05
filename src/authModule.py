@@ -18,6 +18,7 @@ client_id = "e0zhtOtJaykVgA"
 client_secret = "EQS8F-7J_kknyroFr_pGQa6TwCA"
 user_agent = "reddit scraper by /u/new_in_montreal"
 
+
 def removekeys(d, keys):
     for key in keys:
         try:
@@ -25,6 +26,7 @@ def removekeys(d, keys):
         except KeyError:
             pass
     return
+
 
 # Removing un-needed fields
 comm_dict_remove = [
@@ -66,11 +68,11 @@ comm_dict_remove = [
 
 
 reddit = praw.Reddit(
-            client_id=client_id,
-            client_secret=client_secret,
-            password=password,
-            username=username,
-            user_agent=user_agent)
+    client_id=client_id,
+    client_secret=client_secret,
+    password=password,
+    username=username,
+    user_agent=user_agent)
 
 reddit.read_only = True
 reddit.config.store_json_result = True
@@ -88,14 +90,13 @@ for comment in reddit.redditor(user_name).comments.new(limit=None):
     comments.append(comment)
 
 comments = comments[::-1]
-with open(user_name+'.txt', 'w') as fout:
+with open(user_name + '.txt', 'w') as fout:
     for item in comments:
         comment_dict = item.__dict__
         #comment_dict['author'] = comment.author.name
-	#comment_dict['subreddit'] = comment.subreddit.display_name
-	#removekeys(comment_dict, comm_dict_remove)
-	#z = json.dumps(comment_dict)
-	#fout.write('%s\n' % z)
+        #comment_dict['subreddit'] = comment.subreddit.display_name
+        #removekeys(comment_dict, comm_dict_remove)
+        #z = json.dumps(comment_dict)
+        #fout.write('%s\n' % z)
         pprint(sorted(comment_dict.keys()))
         break
-
