@@ -94,11 +94,79 @@ post_dict_keep = [
      'upvote_ratio',
      'url']
 
+subs = ['loseit', 'relationships', 'TwoXChromosomes']
+
 #----------------------------------------------------------------------
-# Class POST Panda
+# Main Functions
+
+def get_collected(subreddit):
+    collected_posts = []
+    trckpath = os.path.join(datapath, 'trackers', 'posttracker')
+    track_pod = POD(trckpath)
+    for key in track_pod._keys:
+        if track_pod[key]:
+            collected_posts.append(key)
+    return collected_posts
+
+def process_posts(subreddit, post_id):
+    commpath = os.path.join(datapath, 'comments')
+    post_path = os.path.join(commpath, post_id)
+    post_files = sorted(os.listdir(post_path))
+    post_files = [filename for filename in post_files if 'post' not in filename]
+    
+    comms_dict = {}
+    miss_comms = set()
+    
+    for filename in post_files:
+        post_file_path = os.path.join(post_path, filename)
+        with open(post_file_path, 'r') as fin:
+            all_lines = fin.readlines()
+        for line in all_lines:
+            j_obj = json.loads(line)
+            c_id = j_obj['id']
+            c_body = j_obj['body']
+            if clean(c_body) == "[removed]":
+                miss_comms.add(c_id)
+            if c_id not in comms_dict:
+                comms_dict[c_id] = []
+            comms_dict[c_id].append(j_obj)
+            
+    auth_list = []
+    for item in miss_comms:
+        body = clean(comms_dict[item][0]['body'])
+        if body != "[removed]":
+            author = comms_dict[item][0]['author']
+            if author != "[removed]" and author != "[deleted]":
+                auth_list.append(author)
+
+    return auth_list
+
+#----------------------------------------------------------------------
+
+config = ConfigParser.ConfigParser()
+config.read('CONFIG.INI')
+basepath = ConfigSectionMap("CommonConfigs", config)['datapath']
+
+def main(subreddit):
+    # Setup
+    datapath = os.path.join(basepath, subreddit)
+    posttrpath = os.path.join(datapath, 'trackers', 'processtracker')
+    usertrpath = os.path.join(datapath, 'trackers', 'usertracker')
+    makedir(posttrpath)
+    makedir(usertrpath)
+    processtrack_pod = POD(posttrpath)
+    usertrack_pod = POD(usertrpath)
+
+    
+    collected_posts = get_collected(subreddit)
+    auth_list = []
+
+    for post_id in collected_posts:
+        auth_list.extend(process_posts(subreddit, post_id))
 
 
-class postpanda:
+'''
+class panda:
     def __init__(self, subname):
         self.reddit = None
         self.catbot = None
@@ -206,16 +274,17 @@ class postpanda:
 
     # tracker
     def update_tracker(self):
-        tracked_posts = self.track_pod.keys()
         done_posts = sorted(
             list(set(self.previous_posts) - set(self.current_posts)))
         for post_id in done_posts:
-            self.track_pod[post_id]['collected'] = True
+            self.track_pod[post_id] = True
         new_posts = sorted(
             list(set(self.current_posts) - set(self.previous_posts)))
         for post_id in new_posts:
-            self.track_pod[post_id] = {
-                'collected': False}
+            self.track_pod[post_id] = False
+        print 'POD', len(self.track_pod._keys)
+        print 'POD', self.track_pod._path
+        self.track_pod.sync()
         return
 
 
@@ -248,3 +317,4 @@ if __name__ == "__main__":
     # Schedule the scraping
     runPanda = scheduler.scheduler(m=20)
     runPanda.runit(p.redditPANDA)
+'''
