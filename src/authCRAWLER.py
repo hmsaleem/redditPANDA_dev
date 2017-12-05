@@ -19,10 +19,12 @@ from datetime import datetime
 import json
 import os
 import praw
+import prawcore
 from catbot import Catbot
 from sciurus import scheduler
 from tastypy import POD
 from pprint import pprint
+
 
 #----------------------------------------------------------------------
 # Helper methods
@@ -148,29 +150,37 @@ def process_posts(subreddit, post_id):
 
 
 def get_users(usertrack_pod, subreddit):
-
+    datapath = os.path.join(basepath, subreddit)
+    userpath = os.path.join(datapath, 'users')
     for user in usertrack_pod._keys:
+        print user
         last_comment_id = usertrack_pod[user]
-        comments = []
-        for comment in reddit.redditor(user).comments.new(limit=None):
-            if comment.id == last_comment_id:
-                break
-            comments.append(comment)
-        comments = comments[::-1]
-        user_file = os.path.join(userpath, user + '.txt')
-        with open(user_file, 'a') as fout:
-            for item in comments:
-                comment_dict = item.__dict__
-                comment_dict['author'] = comment.author.name
-                comment_dict['subreddit'] = comment.subreddit.display_name
-                removekeys(comment_dict, comm_dict_keep)
-                z = json.dumps(comment_dict)
-                fout.write('%s\n' % z)
-        last_comment_id = comments[-1]['id']
-        usertrack_pod[user] = last_comment_id
+        if last_comment_id != 'deleted':
+            comments = []
+            try:
+                for comment in reddit.redditor(user).comments.new(limit=None):
+                    if comment.id == last_comment_id:
+                        break
+                    comments.append(comment)
+                comments = comments[::-1]
+            except prawcore.exceptions.NotFound:
+                usertrack_pod[user] = 'deleted'
+                usertrack_pod.sync()
+            if comments:
+                user_file = os.path.join(userpath, user + '.txt')
+                with open(user_file, 'a') as fout:
+                    for item in comments:
+                        comment_dict = item.__dict__
+                        comment_dict['author'] = item.author.name
+                        comment_dict['subreddit'] = item.subreddit.display_name
+                        removekeys(comment_dict, comm_dict_keep)
+                        z = json.dumps(comment_dict)
+                        fout.write('%s\n' % z)
+                last_comment_id = comments[-1].id
+                usertrack_pod[user] = last_comment_id
+                usertrack_pod.sync()
     catbot.postToSlack('Complete ... %s, %s' %
                        (subreddit, str(datetime.now())[5:-10]))
-    usertrack_pod.sync()
     return
 
 
@@ -220,7 +230,7 @@ if __name__ == "__main__":
     proxyport = str(conf['proxpyport'])
     os.environ['HTTPS_PROXY'] = 'socks5://127.0.0.1:{}'.format(proxyport)
     os.environ['HTTP_PROXY'] = 'socks5://127.0.0.1:{}'.format(proxyport)
-    comm = ConfigSectionMap("CommonConfigs", self.config)
+    comm = ConfigSectionMap("CommonConfigs", config)
     reddit = praw.Reddit(
         client_id=conf['client_id'],
         client_secret=conf['client_secret'],
