@@ -222,8 +222,8 @@ def userPANDA(subreddit):
 if __name__ == "__main__":
 
     config = ConfigParser.ConfigParser()
-    config.read('CONFIG.INI')
-    basepath = ConfigSectionMap("CommonConfigs", config)['datapath']
+    config.read('/home/ndg/users/hsalee/tools/redditPANDA_dev/src/CONFIG.INI')
+    basepath = ConfigSectionMap('CommonConfigs', config)['datapath']
 
     # Login into Reddit with config details
     conf = ConfigSectionMap('users', config)
