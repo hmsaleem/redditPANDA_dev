@@ -104,7 +104,6 @@ class postpanda:
         self.catbot = None
         self.track_pod = None
         self.subreddit = subname
-        self.previous_posts = []
         self.current_posts = []
         self.config = ConfigParser.ConfigParser()
         self.config.read('CONFIG.INI')
@@ -206,16 +205,15 @@ class postpanda:
 
     # tracker
     def update_tracker(self):
+        tracked_posts = [post_id for post_id in self.track_pod._keys if not self.track_pod[post_id]]
         done_posts = sorted(
-            list(set(self.previous_posts) - set(self.current_posts)))
+            list(set(tracked_posts) - set(self.current_posts)))
         for post_id in done_posts:
             self.track_pod[post_id] = True
         new_posts = sorted(
-            list(set(self.current_posts) - set(self.previous_posts)))
+            list(set(self.current_posts) - set(tracked_posts)))
         for post_id in new_posts:
             self.track_pod[post_id] = False
-        print 'POD', len(self.track_pod._keys)
-        print 'POD', self.track_pod._path
         self.track_pod.sync()
         return
 
@@ -230,7 +228,6 @@ class postpanda:
             print post_id, len(all_comments)
             self.write_comments(post_id, all_comments)
         print 'all files written... %s' % str(datetime.now())[5:-10]
-        self.previous_posts = self.current_posts
         return
 
 
