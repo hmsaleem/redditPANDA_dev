@@ -163,7 +163,7 @@ def get_users(usertrack_pod, subreddit):
                         break
                     comments.append(comment)
                 comments = comments[::-1]
-            except prawcore.exceptions.NotFound:
+            except (prawcore.exceptions.NotFound, prawcore.exceptions.Forbidden) as e:
                 usertrack_pod[user] = 'deleted'
                 usertrack_pod.sync()
             if comments:
