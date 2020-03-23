@@ -24,7 +24,7 @@ from catbot import Catbot
 from sciurus import scheduler
 from tastypy import POD
 from pprint import pprint
-
+from sciurus import scheduler
 
 #----------------------------------------------------------------------
 # Helper methods
@@ -249,5 +249,14 @@ if __name__ == "__main__":
     reddit.config.store_json_result = True
 
     # Get comments
-    for subreddit in subs:
-        userPANDA(subreddit)
+    def get_commemnts():
+        for subreddit in subs:
+            userPANDA(subreddit)
+        return
+    
+    # Scheduler setup
+    
+    ss = scheduler.scheduler(h=24)
+    ss.runit(get_commemnts)
+
+
